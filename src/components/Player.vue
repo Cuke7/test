@@ -99,15 +99,29 @@
 export default {
     name: "Player",
 
+    props: ["current_loading_song", "current_loaded_song"],
+
     data: () => ({
-        current_loading_song: { loading: false },
-        current_loaded_song: null,
         time: 0,
         isPlaying: false,
         show_player: false,
         duration: "300",
         shuffle: { state: 1, icon: "mdi-shuffle-disabled" }, // 1 normal, 2 shuffle, 3 repeat
     }),
+    watch: {
+        isPlaying(isPlaying) {
+            if (isPlaying) {
+                this.play();
+            } else {
+                this.pause();
+            }
+        },
+        time(time) {
+            if (Math.abs(time - this.$refs.audio.currentTime) > 0.5) {
+                this.$refs.audio.currentTime = time;
+            }
+        },
+    },
     methods: {
         change_shuffle() {
             if (this.shuffle.state == 3) {
@@ -125,6 +139,30 @@ export default {
                 this.shuffle.state = 2;
                 this.shuffle.icon = "mdi-repeat";
             }
+        },
+        load_song(song) {
+            this.$refs.audio.src = "https://my-servo.herokuapp.com/musicAPI/get_audio?id=" + encodeURI(song.id);
+            // Then, player_is_ready should fire next
+        },
+        player_is_ready() {
+            this.show_player = true;
+
+            this.play();
+
+            this.$emit("playerIsRready");
+
+            console.log("Player is ready");
+
+            //document.getElementById('custom_player').style.backgroundImage = "url(" + this.current_loaded_song.thumbnail + ")";
+        },
+        play() {
+            this.show_player = true;
+            this.isPlaying = true;
+            this.$refs.audio.play();
+        },
+        pause() {
+            this.isPlaying = false;
+            this.$refs.audio.pause();
         },
     },
 };

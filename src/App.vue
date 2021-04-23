@@ -32,11 +32,11 @@
         <v-main>
             <v-tabs-items v-model="tab">
                 <v-tab-item>
-                    <Youtube ref="youtube_tab" @gotSearchResults="got_search_results"></Youtube>
+                    <Youtube ref="youtube_tab" @gotSearchResults="got_search_results" @loadSong="load_song_event"></Youtube>
                 </v-tab-item>
 
-                <v-tab-item>
-                    Hello liste de lecture
+                <v-tab-item eager>
+                    <ListeLecture eager ref="listeLecture_tab"></ListeLecture>
                 </v-tab-item>
 
                 <v-tab-item>
@@ -51,7 +51,7 @@
                 </v-btn>
             </v-fab-transition>
 
-            <Player ref="player"></Player>
+            <Player ref="player" v-bind:current_loaded_song="current_loaded_song" v-bind:current_loading_song="current_loading_song" @playerIsRready="player_is_ready_event"></Player>
         </v-main>
     </v-app>
 </template>
@@ -59,6 +59,7 @@
 <script>
 import Youtube from "./components/Youtube";
 import Player from "./components/Player";
+import ListeLecture from "./components/ListeLecture";
 
 export default {
     name: "App",
@@ -66,12 +67,15 @@ export default {
     components: {
         Youtube,
         Player,
+        ListeLecture,
     },
 
     data: () => ({
         dark_mode_activated: true,
         tab: 0,
         song_index: 0,
+        current_loading_song: { loading: false },
+        current_loaded_song: null,
     }),
     methods: {
         reset_search() {
@@ -88,10 +92,79 @@ export default {
             this.tab = 0;
             window.scrollTo(0, 0);
             this.show_player(false);
+            console.log(this.$refs.listeLecture_tab);
         },
         show_player(bool) {
             this.$refs.player.show_player = bool;
         },
+        load_song_event(song) {
+            this.$refs.listeLecture_tab.liste_lecture.list = [song];
+            this.$refs.player.load_song(song);
+
+            // Reset all the others items in the search_results
+            for (const song_temp of this.$refs.youtube_tab.search_results) {
+                song_temp.loaded = false;
+                song_temp.loading = false;
+            }
+
+            this.current_loading_song = song;
+            this.current_loading_song.loading = true;
+            // Reset all the others items in the liste_lecture
+            // for (const song_temp of this.liste_lecture.list) {
+            //     song_temp.loaded = false;
+            //     song_temp.loading = false;
+            // }
+            //this.song_index = song.index;
+        },
+        player_is_ready_event() {
+            this.current_loaded_song = this.current_loading_song;
+            this.current_loaded_song.loaded = true;
+            this.current_loaded_song.loading = false;
+
+            navigator.mediaSession.metadata.title = this.current_loaded_song.title;
+            navigator.mediaSession.metadata.artwork = [{ src: this.current_loaded_song.thumbnail, sizes: "312x312", type: "image/png" }];
+            navigator.mediaSession.metadata.artist = this.current_loaded_song.artist;
+        },
+    },
+    watch: {
+        dark_mode_activated(val) {
+            this.$vuetify.theme.dark = !val;
+        },
+    },
+    mounted: function() {
+        this.$nextTick(function() {
+            if ("mediaSession" in navigator) {
+                // eslint-disable-next-line no-undef
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: "Never Gonna Give You Up",
+                    artist: "",
+                    album: "",
+                    artwork: [
+                        { src: "https://dummyimage.com/96x96", sizes: "96x96", type: "image/png" },
+                        { src: "https://dummyimage.com/128x128", sizes: "128x128", type: "image/png" },
+                        { src: "https://dummyimage.com/192x192", sizes: "192x192", type: "image/png" },
+                        { src: "https://dummyimage.com/256x256", sizes: "256x256", type: "image/png" },
+                        { src: "https://dummyimage.com/384x384", sizes: "384x384", type: "image/png" },
+                        { src: "https://dummyimage.com/512x512", sizes: "512x512", type: "image/png" },
+                    ],
+                });
+
+                navigator.mediaSession.setActionHandler("play", function() {
+                    this.$refs.Player.play();
+                });
+                navigator.mediaSession.setActionHandler("pause", function() {
+                     this.$refs.Player.pause();
+                });
+                navigator.mediaSession.setActionHandler("seekbackward", function() {});
+                navigator.mediaSession.setActionHandler("seekforward", function() {});
+                navigator.mediaSession.setActionHandler("previoustrack", function() {
+                     this.$refs.Player.change_song(false);
+                });
+                navigator.mediaSession.setActionHandler("nexttrack", function() {
+                     this.$refs.Player.change_song(true);
+                });
+            }
+        });
     },
 };
 </script>

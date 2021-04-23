@@ -45,7 +45,7 @@
                                     @click="
                                         liste_lecture.list = [song];
                                         liste_lecture.name = null;
-                                        load_song(song);
+                                        send_load_song_event(song);
                                     "
                                     width="50"
                                     height="50"
@@ -70,7 +70,7 @@ export default {
 
     data: () => ({
         search_loading: null,
-        search_query: null,
+        search_query: "Centuries",
         search_results: [],
         liste_lecture: [],
     }),
@@ -107,6 +107,9 @@ export default {
                 this.error_snackbar = true;
                 this.search_loading = false;
             }
+        },
+        send_load_song_event(song) {
+            this.$emit("loadSong", song);
         },
     },
 };
