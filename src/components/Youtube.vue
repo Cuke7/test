@@ -109,7 +109,7 @@ export default {
             }
         },
         send_load_song_event(song) {
-            this.$emit("loadSong", song);
+            this.$emit("loadSong", song, false);
         },
     },
 };

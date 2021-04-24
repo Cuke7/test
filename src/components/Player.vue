@@ -105,6 +105,7 @@ export default {
         time: 0,
         isPlaying: false,
         show_player: false,
+        song_index: null,
         duration: "300",
         shuffle: { state: 1, icon: "mdi-shuffle-disabled" }, // 1 normal, 2 shuffle, 3 repeat
     }),
@@ -163,6 +164,9 @@ export default {
         pause() {
             this.isPlaying = false;
             this.$refs.audio.pause();
+        },
+        change_song(forward) {
+            this.$emit("changeSong", forward, this.shuffle.state);
         },
     },
 };

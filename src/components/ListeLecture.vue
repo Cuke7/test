@@ -21,19 +21,7 @@
                                 <v-btn v-if="song.loaded" fab :disabled="true" color="secondary" width="50" height="50">
                                     <v-icon>mdi-music-note</v-icon>
                                 </v-btn>
-                                <v-btn
-                                    v-else
-                                    :loading="song.loading"
-                                    :disabled="song.loading"
-                                    fab
-                                    color="secondary"
-                                    @click="
-                                        current_loading_song = song;
-                                        load_song(song);
-                                    "
-                                    width="50"
-                                    height="50"
-                                >
+                                <v-btn v-else :loading="song.loading" :disabled="song.loading" fab color="secondary" @click="send_load_song_event(song)" width="50" height="50">
                                     <v-icon>mdi-play</v-icon>
                                 </v-btn>
                             </div>
@@ -55,6 +43,10 @@ export default {
     data: () => ({
         liste_lecture: { list: [], name: "", loading: false },
     }),
-    methods: {},
+    methods: {
+        send_load_song_event(song) {
+            this.$emit("loadSong", song, true);
+        },
+    },
 };
 </script>
